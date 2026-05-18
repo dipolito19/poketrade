@@ -43,7 +43,7 @@ export type ParsedPokemon = {
   raw_text: string
 }
 
-// Multiline section states
+// ── Section state ──────────────────────────────────────────────────────────────
 type Section =
   | 'none'
   | 'move_upgrades'
@@ -53,6 +53,34 @@ type Section =
   | 'extra_infos'
   | 'evolution'
   | 'held_level'
+
+// Section headers that close a multi-line collecting section
+const SECTION_HEADER_PATTERNS: RegExp[] = [
+  /^you see/i,
+  /^sex:/i,
+  /^(hp|atk|def|sp\.atk|sp\.def|speed):\s*\d+/i,
+  /^perfection:/i,
+  /^special ability/i,
+  /^abilities\s*:/i,
+  /^seal:/i,
+  /^poke\s*aura\s*:/i,
+  /^held item:/i,
+  /^held\s*:?\s*$/i,
+  /^tms?\s*:/i,
+  /^move\s+up-?grade/i,
+  /^vitamins?\s*:\s*\(/i,
+  /^extra\s+infos?\s*:/i,
+  /^evolution\s*:/i,
+]
+
+function isNewSection(line: string): boolean {
+  return SECTION_HEADER_PATTERNS.some(re => re.test(line))
+}
+
+// The name line always has (Level N) or [+N] or Upgrade:
+function isNameLine(line: string): boolean {
+  return /\(level\s+\d+\)/i.test(line) || /\[\+?\d+\]/.test(line)
+}
 
 export function parsePokemonText(raw: string): ParsedPokemon {
   const lines = raw.split('\n').map(l => l.trim()).filter(Boolean)
@@ -103,33 +131,108 @@ export function parsePokemonText(raw: string): ParsedPokemon {
   }
 
   let section: Section = 'none'
+  // Buffers for multi-line sections
   const abilityDescLines: string[] = []
   const evolutionLines: string[] = []
 
   for (const line of lines) {
-    const low = line.toLowerCase()
+    // ── STEP 1: Multi-line collecting sections ─────────────────────────────────
+    // Handled FIRST. When a new section is detected, we flush and fall through
+    // to process the current line as a named section header (no `continue`).
 
-    // ── Pokeball line ──────────────────────────────────────────────────────────
-    // "You see a discharged poke ball."
-    // "You see a inuse hogwarts ball (25% ATK/DEF Dark/Ghost)."
-    if (low.startsWith('you see')) {
+    if (section === 'ability_description') {
+      if (isNewSection(line)) {
+        result.ability_description = abilityDescLines.join('\n').trim() || null
+        section = 'none'
+        // fall through — do NOT continue
+      } else {
+        abilityDescLines.push(line)
+        continue
+      }
+    }
+
+    if (section === 'vitamins') {
+      if (isNewSection(line)) {
+        section = 'none'
+        // fall through
+      } else {
+        const cleaned = line.replace(/^and\s+/i, '').replace(/,\s*$/, '').trim()
+        if (cleaned) result.vitamin_details.push(cleaned)
+        continue
+      }
+    }
+
+    if (section === 'extra_infos') {
+      if (isNewSection(line)) {
+        section = 'none'
+        // fall through
+      } else {
+        const cleaned = line.replace(/^[*\-]\s*/, '').trim()
+        if (cleaned) result.extra_infos.push(cleaned)
+        continue
+      }
+    }
+
+    if (section === 'evolution') {
+      if (isNewSection(line)) {
+        result.evolution = evolutionLines.join('\n').trim() || null
+        section = 'none'
+        // fall through
+      } else {
+        evolutionLines.push(line)
+        continue
+      }
+    }
+
+    if (section === 'abilities_list') {
+      result.abilities = parseAbilitiesList(line)
+      section = 'none'
+      continue
+    }
+
+    if (section === 'held_level') {
+      result.held_level = line.trim()
+      section = 'none'
+      continue
+    }
+
+    if (section === 'move_upgrades') {
+      if (isNewSection(line)) {
+        section = 'none'
+        // fall through
+      } else if (line.includes('[')) {
+        result.move_upgrades.push(...parseMoveUpgrades(line))
+        continue
+      } else {
+        // blank or legend line — stay in section
+        continue
+      }
+    }
+
+    // ── STEP 2: Named section header checks ────────────────────────────────────
+
+    // Pokeball: "You see a discharged poke ball." / "You see a inuse X ball (bonus)."
+    if (/^you see/i.test(line)) {
       const m = line.match(/you see a (?:inuse\s+|discharged\s+)?(.+?)\s*(?:\(([^)]+)\))?\.?\s*$/i)
       if (m) {
         result.pokeball = m[1].trim()
         result.pokeball_bonus = m[2]?.trim() ?? null
       }
-      section = 'none'
       continue
     }
 
-    // ── Sex ────────────────────────────────────────────────────────────────────
-    if (/^sex:/i.test(line)) {
-      result.sex = line.replace(/^sex:\s*/i, '').trim()
-      section = 'none'
+    // Name line: "Shiny Cryogonal (GOD) (EGG) ... (Level 100) [+227] Upgrade: [0]."
+    // Detected by the presence of (Level N) or [+N] — NOT by absence of colons.
+    if (result.name === '' && isNameLine(line)) {
+      parseNameLine(line, result)
       continue
     }
 
-    // ── Stats ──────────────────────────────────────────────────────────────────
+    // Sex
+    const sexM = line.match(/^sex:\s*(.+)$/i)
+    if (sexM) { result.sex = sexM[1].trim(); continue }
+
+    // Stats: "Hp: 28 (+500)"
     const statM = line.match(/^(Hp|Atk|Def|Sp\.Atk|Sp\.Def|Speed):\s*(\d+)\s*(?:\(\+(\d+)\))?/i)
     if (statM) {
       const key = statM[1].toLowerCase().replace('.', '')
@@ -143,93 +246,63 @@ export function parsePokemonText(raw: string): ParsedPokemon {
         case 'spdef': result.stat_spdef = val; result.bonus_spdef = bonus; break
         case 'speed': result.stat_speed = val; result.bonus_speed = bonus; break
       }
-      section = 'none'
       continue
     }
 
-    // ── Perfection ─────────────────────────────────────────────────────────────
+    // Perfection
     const perfM = line.match(/perfection:\s*([\d.]+)%/i)
-    if (perfM) {
-      result.perfection = parseFloat(perfM[1])
-      section = 'none'
+    if (perfM) { result.perfection = parseFloat(perfM[1]); continue }
+
+    // Special Ability (two forms):
+    //   "Special Ability: Sniper."              → single-line
+    //   "Special Ability - Battle Armor:"       → description follows
+    const saSimple = line.match(/^special ability\s*:\s*(.+?)\.?\s*$/i)
+    const saDesc   = line.match(/^special ability\s*-\s*(.+?)\s*:\s*$/i)
+    if (saDesc) {
+      result.ability = saDesc[1].trim()
+      section = 'ability_description'
+      abilityDescLines.length = 0
+      continue
+    }
+    if (saSimple) {
+      result.ability = saSimple[1].trim()
       continue
     }
 
-    // ── Special Ability (with optional description block) ──────────────────────
-    // "Special Ability: Sniper."  → single-line form
-    // "Special Ability - Battle Armor:"  → multi-line description follows
-    const saM = line.match(/^special ability(?:\s*[-:]\s*|\s*:\s*)(.+?)(?:\.|\s*:)?\s*$/i)
-    if (saM) {
-      const val = saM[1].trim().replace(/\.$/, '')
-      if (low.includes('-') || line.endsWith(':')) {
-        // "Special Ability - Battle Armor:" → description follows
-        result.ability = val
-        section = 'ability_description'
-        abilityDescLines.length = 0
-      } else {
-        result.ability = val
-        section = 'none'
-      }
-      continue
-    }
-
-    // ── Abilities (plural list) ────────────────────────────────────────────────
-    // "Abilities:" → next line(s) with the list
-    // " Abilities:\nStrength, Rock Smash and Blink..."
+    // Abilities (plural list) — header only; content on next line
     if (/^abilities\s*:/i.test(line)) {
-      section = 'abilities_list'
-      // inline list?
       const inline = line.replace(/^abilities\s*:\s*/i, '').trim()
       if (inline) {
         result.abilities = parseAbilitiesList(inline)
-        section = 'none'
+      } else {
+        section = 'abilities_list'
       }
       continue
     }
 
-    // ── Seal ───────────────────────────────────────────────────────────────────
-    // "Seal: star seal F (ATK: 40% DEF: 40%)."
+    // Seal
     const sealM = line.match(/^seal:\s*(.+?)\.?\s*$/i)
-    if (sealM) {
-      result.seal = sealM[1].trim()
-      section = 'none'
-      continue
-    }
+    if (sealM) { result.seal = sealM[1].trim(); continue }
 
-    // ── PokeAura ───────────────────────────────────────────────────────────────
-    // "PokeAura: Niver (+0) (ATK +66%) (DEF +85%)"
+    // PokeAura
     const auraM = line.match(/^poke\s*aura\s*:\s*(.+?)\.?\s*$/i)
-    if (auraM) {
-      result.aura = auraM[1].trim()
-      section = 'none'
-      continue
-    }
+    if (auraM) { result.aura = auraM[1].trim(); continue }
 
-    // ── Held Item (simple inline) ──────────────────────────────────────────────
-    // "Held Item: Soft Sand."
+    // Held Item (inline): "Held Item: Never Melt Ice."
     const heldItemM = line.match(/^held item:\s*(.+?)\.?\s*$/i)
-    if (heldItemM) {
-      result.held_item = heldItemM[1].trim()
-      section = 'none'
-      continue
-    }
+    if (heldItemM) { result.held_item = heldItemM[1].trim(); continue }
 
-    // ── Held (level block) ─────────────────────────────────────────────────────
-    // "Held:" → next line(s): "Level 7 Never Melt Ice +20%"
+    // Held (block): "Held:" → next line is "Level 7 Never Melt Ice +20%"
     if (/^held\s*:?\s*$/i.test(line)) {
       section = 'held_level'
       continue
     }
 
-    // ── TMs ────────────────────────────────────────────────────────────────────
+    // TMs
     const tmM = line.match(/^tms?\s*:\s*(.+)/i)
-    if (tmM) {
-      result.tms = parseTMList(tmM[1])
-      section = 'none'
-      continue
-    }
+    if (tmM) { result.tms = parseTMList(tmM[1]); continue }
 
-    // ── Move Upgrades header ───────────────────────────────────────────────────
+    // Move Upgrades header: "Move Up-grades (Slots: 15/15) (5/5):"
     const moveHeaderM = line.match(/^move\s+up-?grades?\s*(?:\(slots?:\s*(\d+)\/(\d+)\))?\s*(?:\((\d+\/\d+)\))?:?/i)
     if (moveHeaderM) {
       if (moveHeaderM[1]) result.move_slots_used = parseInt(moveHeaderM[1])
@@ -239,7 +312,7 @@ export function parsePokemonText(raw: string): ParsedPokemon {
       continue
     }
 
-    // ── Vitamins header ────────────────────────────────────────────────────────
+    // Vitamins header: "Vitamins: (30/30)"
     const vitHeaderM = line.match(/^vitamins?\s*:\s*\((\d+)\/(\d+)\)/i)
     if (vitHeaderM) {
       result.vitamins_used = parseInt(vitHeaderM[1])
@@ -248,90 +321,26 @@ export function parsePokemonText(raw: string): ParsedPokemon {
       continue
     }
 
-    // ── Extra Infos header ─────────────────────────────────────────────────────
+    // Extra Infos header
     if (/^extra\s+infos?\s*:/i.test(line)) {
       section = 'extra_infos'
       continue
     }
 
-    // ── Evolution header ───────────────────────────────────────────────────────
+    // Evolution header
     if (/^evolution\s*:/i.test(line)) {
-      section = 'evolution'
-      evolutionLines.length = 0
       const inline = line.replace(/^evolution\s*:\s*/i, '').trim()
+      evolutionLines.length = 0
       if (inline) evolutionLines.push(inline)
+      section = 'evolution'
       continue
     }
 
-    // ── Skip legend/footnote lines (BB = ..., EGG = ..., PL = ...) ────────────
-    if (/^\(([A-Z]{1,4})\)\s*=\s*/i.test(line)) {
-      section = 'none'
-      continue
-    }
-
-    // ── Name line (must come after all "Section:" patterns above) ──────────────
-    // "Shiny Cryogonal (GOD) (EGG) (BB) (PL)(ZERO PROTOCOL) (Level 100) [+227] Upgrade: [0]."
-    if (result.name === '' && /^(Shiny\s+)?[A-Z][a-zA-Z\-']+/.test(line) && !low.includes(':')) {
-      parseNameLine(line, result)
-      section = 'none'
-      continue
-    }
-
-    // ── Section body handlers ──────────────────────────────────────────────────
-
-    if (section === 'ability_description') {
-      // Stop collecting if we hit another named section
-      if (isNewSection(line)) {
-        result.ability_description = abilityDescLines.join('\n').trim() || null
-        section = 'none'
-        // re-process this line as a new section by falling through — but since
-        // we can't re-process in a for loop, we handle common cases below
-        handleFallthroughLine(line, result)
-      } else {
-        abilityDescLines.push(line)
-      }
-      continue
-    }
-
-    if (section === 'abilities_list') {
-      result.abilities = parseAbilitiesList(line)
-      section = 'none'
-      continue
-    }
-
-    if (section === 'move_upgrades' && line.includes('[')) {
-      result.move_upgrades.push(...parseMoveUpgrades(line))
-      continue
-    }
-
-    if (section === 'vitamins') {
-      // Lines: "9x HP Up (+50% Max HP)," or "and 9x PP Up (...)"
-      const cleaned = line.replace(/^and\s+/i, '').replace(/,\s*$/, '').trim()
-      if (cleaned) result.vitamin_details.push(cleaned)
-      continue
-    }
-
-    if (section === 'held_level') {
-      // "Level 7 Never Melt Ice +20%"
-      result.held_level = line.trim()
-      section = 'none'
-      continue
-    }
-
-    if (section === 'extra_infos') {
-      // Lines start with "*" or "- " or plain text
-      const cleaned = line.replace(/^[*\-]\s*/, '').trim()
-      if (cleaned) result.extra_infos.push(cleaned)
-      continue
-    }
-
-    if (section === 'evolution') {
-      evolutionLines.push(line)
-      continue
-    }
+    // Skip legend footnotes: "(BB) = Baby Potion"
+    if (/^\([A-Z]{1,4}\)\s*=/i.test(line)) continue
   }
 
-  // Flush ability description if file ends while collecting
+  // Flush any open collecting sections
   if (abilityDescLines.length > 0 && result.ability_description === null) {
     result.ability_description = abilityDescLines.join('\n').trim() || null
   }
@@ -353,40 +362,39 @@ function parseNameLine(line: string, result: ParsedPokemon) {
     rest = rest.replace(/^shiny\s+/i, '')
   }
 
-  // Name = first word(s) before a parenthesis or bracket
+  // Name = first word (or two words if both capitalized) before any paren/bracket
   const nameM = rest.match(/^([A-Z][a-zA-Z\-']+(?:\s[A-Z][a-zA-Z\-']+)?)/)
   if (nameM) result.name = nameM[1].trim()
 
-  // Tier: first (X+*) that looks like a tier
+  // Tier: first (X+*) looking like a tier rating
   const tierM = rest.match(/\(([SABCDE][+\-]*)\)/)
   if (tierM) result.tier = tierM[1]
 
-  // Awaken: (A) present
+  // Awaken: (A) tag
   result.awaken = /\(A\)/.test(rest)
 
-  // Seasonal tags: uppercase words in parens that are NOT known tokens
-  // Also handles multi-word like (ZERO PROTOCOL)
-  const knownSingle = new Set(['A', 'P', 'GOD', 'EGG', 'BB', 'PL', 'Level'])
+  // Seasonal/event tags: anything in parens that isn't a known token or tier
+  const knownTokens = new Set(['A', 'P', 'GOD', 'EGG', 'BB', 'PL'])
   const parenTokens = Array.from(rest.matchAll(/\(([^)]+)\)/g)).map(m => m[1].trim())
   const seasonalCandidates = parenTokens.filter(t => {
     if (/^[SABCDE][+\-]*$/.test(t)) return false   // tier
-    if (/^level\s+\d+$/i.test(t)) return false       // Level 100
-    if (knownSingle.has(t.toUpperCase())) return false
+    if (/^level\s+\d+$/i.test(t)) return false      // Level 100
+    if (knownTokens.has(t.toUpperCase())) return false
     if (/^\d+$/.test(t)) return false
     return true
   })
   if (seasonalCandidates.length > 0) result.seasonal_tag = seasonalCandidates[0]
 
-  // Boost level: [+200]
+  // Boost level: [+227]
   const boostM = rest.match(/\[\+(\d+)\]/)
   if (boostM) result.boost_level = parseInt(boostM[1])
 
-  // Upgrade level
+  // Upgrade level: Upgrade: [0]
   const upgradeM = rest.match(/Upgrade:\s*\[(\d+)\]/i)
   if (upgradeM) result.upgrade_level = parseInt(upgradeM[1])
 
   // Souls
-  const soulsM = rest.match(/souls?:\s*(\d+)/i) || rest.match(/\((\d+)\s+souls?\)/i)
+  const soulsM = rest.match(/souls?:\s*(\d+)/i) ?? rest.match(/\((\d+)\s+souls?\)/i)
   if (soulsM) result.souls = parseInt(soulsM[1])
 }
 
@@ -411,33 +419,9 @@ function parseMoveUpgrades(raw: string): { name: string; level: number }[] {
 }
 
 function parseAbilitiesList(raw: string): string[] {
-  // Split on commas and " and " (case-insensitive)
   return raw
     .replace(/\.$/, '')
     .split(/,\s*|\s+and\s+/i)
     .map(s => s.trim())
     .filter(Boolean)
-}
-
-const SECTION_HEADERS = [
-  /^sex:/i, /^(hp|atk|def|sp\.atk|sp\.def|speed):/i, /^perfection:/i,
-  /^special ability/i, /^abilities:/i, /^seal:/i, /^poke\s*aura:/i,
-  /^held item:/i, /^held\s*:?$/i, /^tms?:/i, /^move\s+up-?grade/i,
-  /^vitamins?:/i, /^extra\s+info/i, /^evolution:/i,
-]
-
-function isNewSection(line: string): boolean {
-  return SECTION_HEADERS.some(re => re.test(line))
-}
-
-// Handle lines that were "discovered" while flushing a section
-function handleFallthroughLine(line: string, result: ParsedPokemon) {
-  const sealM = line.match(/^seal:\s*(.+?)\.?\s*$/i)
-  if (sealM) { result.seal = sealM[1].trim(); return }
-
-  const auraM = line.match(/^poke\s*aura\s*:\s*(.+?)\.?\s*$/i)
-  if (auraM) { result.aura = auraM[1].trim(); return }
-
-  const heldM = line.match(/^held item:\s*(.+?)\.?\s*$/i)
-  if (heldM) { result.held_item = heldM[1].trim() }
 }
