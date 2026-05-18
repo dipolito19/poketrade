@@ -1,0 +1,17 @@
+# dependencies
+node_modules/
+
+# next.js
+.next/
+out/
+
+# env (NUNCA commitar o .env.local com senhas reais)
+.env.local
+.env*.local
+
+# vercel
+.vercel
+
+# os
+.DS_Store
+Thumbs.db

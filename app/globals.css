@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0A0A0F;
+  --card: #12121A;
+  --border: #1E1E2E;
+}
+
+body {
+  background-color: var(--bg);
+  color: #E2E2F0;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #12121A; }
+::-webkit-scrollbar-thumb { background: #2A2A3E; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #FFCB05; }
+
+/* Tier badge colors */
+.tier-spp  { color: #FF4500; border-color: #FF4500; }
+.tier-sp   { color: #FF6B00; border-color: #FF6B00; }
+.tier-s    { color: #FFD700; border-color: #FFD700; }
+.tier-app  { color: #7CFC00; border-color: #7CFC00; }
+.tier-ap   { color: #32CD32; border-color: #32CD32; }
+.tier-a    { color: #00FA9A; border-color: #00FA9A; }
+.tier-bpp  { color: #00BFFF; border-color: #00BFFF; }
+.tier-bp   { color: #1E90FF; border-color: #1E90FF; }
+.tier-b    { color: #6495ED; border-color: #6495ED; }
+.tier-c    { color: #BA55D3; border-color: #BA55D3; }
