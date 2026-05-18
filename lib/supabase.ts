@@ -11,6 +11,16 @@ export function getSupabase(): SupabaseClient {
   return _client
 }
 
+export type ItemAd = {
+  id: string
+  name: string
+  description: string | null
+  price: number | null
+  contact: string | null
+  created_at: string
+  updated_at: string
+}
+
 // Convenience alias — use getSupabase() in API routes, supabase in client components
 export const supabase = new Proxy({} as SupabaseClient, {
   get(_target, prop) {

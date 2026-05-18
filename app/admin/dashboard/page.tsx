@@ -93,6 +93,9 @@ export default function AdminDashboard() {
             className="border border-poke-border text-poke-muted hover:text-white hover:border-white/30 px-4 py-2 rounded-lg transition-colors text-sm">
             Sair
           </button>
+          <a href="/admin/items" className="border border-poke-border text-poke-muted hover:text-white hover:border-white/30 px-4 py-2 rounded-lg transition-colors text-sm">
+            Items
+          </a>
           <a href="/" className="border border-poke-border text-poke-muted hover:text-white hover:border-white/30 px-4 py-2 rounded-lg transition-colors text-sm">
             Ver Site
           </a>
