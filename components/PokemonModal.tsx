@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { PokemonAd } from '@/lib/supabase'
 import TierBadge from './TierBadge'
+import PokeballIcon from './PokeballIcon'
 
 function StatRow({ label, val, bonus }: { label: string; val: number | null; bonus: number }) {
   const pct = val != null ? Math.round((val / 31) * 100) : 0
@@ -41,8 +42,6 @@ export default function PokemonModal({ ad, onClose }: { ad: PokemonAd; onClose: 
       document.body.style.overflow = ''
     }
   }, [onClose])
-
-  const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${getPokemonId(ad.name)}.png`
 
   return (
     <div
@@ -86,12 +85,7 @@ export default function PokemonModal({ ad, onClose }: { ad: PokemonAd; onClose: 
         <div className="p-6">
           {/* Hero */}
           <div className="flex gap-6 mb-6">
-            <img
-              src={spriteUrl}
-              alt={ad.name}
-              className="w-32 h-32 object-contain drop-shadow-lg"
-              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-            />
+            <PokeballIcon className="w-32 h-32 drop-shadow-lg" />
             <div className="flex-1 space-y-2">
               {ad.pokeball && (
                 <div>
@@ -311,15 +305,3 @@ export default function PokemonModal({ ad, onClose }: { ad: PokemonAd; onClose: 
   )
 }
 
-const NAME_MAP: Record<string, number> = {
-  bulbasaur: 1, ivysaur: 2, venusaur: 3, charmander: 4, charmeleon: 5, charizard: 6,
-  squirtle: 7, wartortle: 8, blastoise: 9, pikachu: 25, raichu: 26, mewtwo: 150,
-  mew: 151, sawsbuck: 586, eevee: 133, umbreon: 197, espeon: 196, gengar: 94,
-  garchomp: 445, lucario: 448, dragonite: 149, tyranitar: 248, salamence: 373,
-  metagross: 376, rayquaza: 384, dialga: 483, palkia: 484, giratina: 487,
-  arceus: 493, zekrom: 644, reshiram: 643, kyurem: 646,
-}
-
-function getPokemonId(name: string): number {
-  return NAME_MAP[name.toLowerCase()] ?? 0
-}

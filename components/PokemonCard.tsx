@@ -2,6 +2,7 @@
 
 import { PokemonAd } from '@/lib/supabase'
 import TierBadge from './TierBadge'
+import PokeballIcon from './PokeballIcon'
 
 function StatBar({ label, val, bonus }: { label: string; val: number | null; bonus: number }) {
   const pct = val != null ? Math.round((val / 31) * 100) : 0
@@ -23,8 +24,6 @@ function StatBar({ label, val, bonus }: { label: string; val: number | null; bon
 }
 
 export default function PokemonCard({ ad, onClick }: { ad: PokemonAd; onClick: () => void }) {
-  const spriteUrl = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${getPokemonId(ad.name)}.png`
-
   return (
     <button
       onClick={onClick}
@@ -62,13 +61,7 @@ export default function PokemonCard({ ad, onClick }: { ad: PokemonAd; onClick: (
           )}
         </div>
 
-        {/* Mini sprite */}
-        <img
-          src={spriteUrl}
-          alt={ad.name}
-          className="w-14 h-14 object-contain drop-shadow-lg opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all"
-          onError={(e) => { (e.target as HTMLImageElement).src = '/pokeball.svg' }}
-        />
+        <PokeballIcon className="w-14 h-14 opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all drop-shadow-lg" />
       </div>
 
       {/* Stats mini */}
@@ -102,16 +95,3 @@ export default function PokemonCard({ ad, onClick }: { ad: PokemonAd; onClick: (
   )
 }
 
-// Maps Pokémon name to PokéAPI dex number (best-effort common ones)
-const NAME_MAP: Record<string, number> = {
-  bulbasaur: 1, ivysaur: 2, venusaur: 3, charmander: 4, charmeleon: 5, charizard: 6,
-  squirtle: 7, wartortle: 8, blastoise: 9, pikachu: 25, raichu: 26, mewtwo: 150,
-  mew: 151, sawsbuck: 586, eevee: 133, umbreon: 197, espeon: 196, gengar: 94,
-  garchomp: 445, lucario: 448, dragonite: 149, tyranitar: 248, salamence: 373,
-  metagross: 376, rayquaza: 384, dialga: 483, palkia: 484, giratina: 487,
-  arceus: 493, zekrom: 644, reshiram: 643, kyurem: 646,
-}
-
-function getPokemonId(name: string): number {
-  return NAME_MAP[name.toLowerCase()] ?? 0
-}
