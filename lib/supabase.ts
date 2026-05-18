@@ -21,6 +21,7 @@ export const supabase = new Proxy({} as SupabaseClient, {
 export type PokemonAd = {
   id: string
   name: string
+  shiny: boolean
   tier: string | null
   pokeball: string | null
   pokeball_bonus: string | null
@@ -44,7 +45,12 @@ export type PokemonAd = {
   bonus_speed: number
   perfection: number | null
   ability: string | null
+  ability_description: string | null
+  abilities: string[]
+  seal: string | null
+  aura: string | null
   held_item: string | null
+  held_level: string | null
   tms: { name: string; level: number }[]
   move_slots_used: number
   move_slots_total: number
@@ -53,6 +59,8 @@ export type PokemonAd = {
   vitamins_used: number
   vitamins_total: number
   vitamin_details: string[]
+  extra_infos: string[]
+  evolution: string | null
   price: number | null
   contact: string | null
   description: string | null

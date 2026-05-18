@@ -8,16 +8,18 @@ import ParserInput from './ParserInput'
 type FormData = Omit<PokemonAd, 'id' | 'created_at' | 'updated_at'>
 
 const DEFAULT: FormData = {
-  name: '', tier: null, pokeball: null, pokeball_bonus: null,
+  name: '', shiny: false, tier: null, pokeball: null, pokeball_bonus: null,
   awaken: false, seasonal_tag: null, boost_level: 0, upgrade_level: 0, souls: 0,
   sex: null, stat_hp: null, stat_atk: null, stat_def: null,
   stat_spatk: null, stat_spdef: null, stat_speed: null,
   bonus_hp: 0, bonus_atk: 0, bonus_def: 0,
   bonus_spatk: 0, bonus_spdef: 0, bonus_speed: 0,
-  perfection: null, ability: null, held_item: null,
+  perfection: null, ability: null, ability_description: null, abilities: [],
+  seal: null, aura: null, held_item: null, held_level: null,
   tms: [], move_slots_used: 0, move_slots_total: 0,
   move_upgrades_count: null, move_upgrades: [],
   vitamins_used: 0, vitamins_total: 0, vitamin_details: [],
+  extra_infos: [], evolution: null,
   price: null, contact: null, description: null, raw_text: null,
 }
 
@@ -35,6 +37,8 @@ export default function AdminForm({ initial, onSaved, onCancel }: Props) {
     tms: initial.tms ?? [],
     move_upgrades: initial.move_upgrades ?? [],
     vitamin_details: initial.vitamin_details ?? [],
+    abilities: initial.abilities ?? [],
+    extra_infos: initial.extra_infos ?? [],
   } : DEFAULT)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -117,9 +121,15 @@ export default function AdminForm({ initial, onSaved, onCancel }: Props) {
           <Field label="Perfection (%)">
             <input type="number" step="0.001" value={form.perfection ?? ''} onChange={e => set('perfection', e.target.value ? Number(e.target.value) : null)} className={inputCls} />
           </Field>
-          <div className="flex items-center gap-3 pt-6">
-            <input type="checkbox" id="awaken" checked={form.awaken} onChange={e => set('awaken', e.target.checked)} className="w-4 h-4 accent-poke-yellow" />
-            <label htmlFor="awaken" className="text-white text-sm">Awakened</label>
+          <div className="flex items-center gap-6 pt-6">
+            <div className="flex items-center gap-3">
+              <input type="checkbox" id="awaken" checked={form.awaken} onChange={e => set('awaken', e.target.checked)} className="w-4 h-4 accent-poke-yellow" />
+              <label htmlFor="awaken" className="text-white text-sm">Awakened</label>
+            </div>
+            <div className="flex items-center gap-3">
+              <input type="checkbox" id="shiny" checked={form.shiny} onChange={e => set('shiny', e.target.checked)} className="w-4 h-4 accent-poke-yellow" />
+              <label htmlFor="shiny" className="text-white text-sm">Shiny</label>
+            </div>
           </div>
         </div>
       </fieldset>
@@ -161,6 +171,68 @@ export default function AdminForm({ initial, onSaved, onCancel }: Props) {
           </Field>
           <Field label="Held Item">
             <input value={form.held_item ?? ''} onChange={e => set('held_item', e.target.value || null)} className={inputCls} />
+          </Field>
+        </div>
+      </fieldset>
+
+      {/* Abilities list */}
+      <fieldset className="bg-poke-card border border-poke-border rounded-xl p-5">
+        <legend className="text-white font-semibold px-2">Abilities (lista)</legend>
+        <div className="mt-3 space-y-2">
+          {form.abilities.map((ab, i) => (
+            <div key={i} className="flex gap-2">
+              <input
+                value={ab}
+                onChange={e => {
+                  const arr = [...form.abilities]
+                  arr[i] = e.target.value
+                  set('abilities', arr)
+                }}
+                placeholder="Nome da ability"
+                className={inputCls + ' flex-1'}
+              />
+              <button type="button" onClick={() => set('abilities', form.abilities.filter((_, j) => j !== i))}
+                className="text-red-400 hover:text-red-300 px-2">&times;</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => set('abilities', [...form.abilities, ''])}
+            className="text-sm text-poke-yellow hover:underline">+ Adicionar Ability</button>
+        </div>
+      </fieldset>
+
+      {/* Ability Description */}
+      <fieldset className="bg-poke-card border border-poke-border rounded-xl p-5">
+        <legend className="text-white font-semibold px-2">Descrição da Special Ability</legend>
+        <div className="mt-3">
+          <textarea
+            value={form.ability_description ?? ''}
+            onChange={e => set('ability_description', e.target.value || null)}
+            rows={5}
+            placeholder="Descrição completa da ability especial..."
+            className={inputCls + ' resize-y'}
+          />
+        </div>
+      </fieldset>
+
+      {/* Seal & Aura */}
+      <fieldset className="bg-poke-card border border-poke-border rounded-xl p-5">
+        <legend className="text-white font-semibold px-2">Seal & Aura</legend>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+          <Field label="Seal">
+            <input value={form.seal ?? ''} onChange={e => set('seal', e.target.value || null)} className={inputCls} placeholder="ex: star seal F (ATK: 40% DEF: 40%)" />
+          </Field>
+          <Field label="PokeAura">
+            <input value={form.aura ?? ''} onChange={e => set('aura', e.target.value || null)} className={inputCls} placeholder="ex: Niver (+0) (ATK +66%) (DEF +85%)" />
+          </Field>
+        </div>
+      </fieldset>
+
+      {/* Held Level */}
+      <fieldset className="bg-poke-card border border-poke-border rounded-xl p-5">
+        <legend className="text-white font-semibold px-2">Held (com nível)</legend>
+        <div className="mt-3">
+          <Field label="Held Level">
+            <input value={form.held_level ?? ''} onChange={e => set('held_level', e.target.value || null)} className={inputCls} placeholder="ex: Level 7 Never Melt Ice +20%" />
           </Field>
         </div>
       </fieldset>
@@ -277,6 +349,41 @@ export default function AdminForm({ initial, onSaved, onCancel }: Props) {
           ))}
           <button type="button" onClick={() => set('vitamin_details', [...form.vitamin_details, ''])}
             className="text-sm text-poke-yellow hover:underline">+ Adicionar Vitamin</button>
+        </div>
+      </fieldset>
+
+      {/* Extra Infos */}
+      <fieldset className="bg-poke-card border border-poke-border rounded-xl p-5">
+        <legend className="text-white font-semibold px-2">Extra Infos</legend>
+        <div className="mt-3 space-y-2">
+          {form.extra_infos.map((info, i) => (
+            <div key={i} className="flex gap-2">
+              <input
+                value={info}
+                onChange={e => {
+                  const arr = [...form.extra_infos]
+                  arr[i] = e.target.value
+                  set('extra_infos', arr)
+                }}
+                placeholder="ex: Clan Bonus: DMG +40% / DEF +40%"
+                className={inputCls + ' flex-1'}
+              />
+              <button type="button" onClick={() => set('extra_infos', form.extra_infos.filter((_, j) => j !== i))}
+                className="text-red-400 hover:text-red-300 px-2">&times;</button>
+            </div>
+          ))}
+          <button type="button" onClick={() => set('extra_infos', [...form.extra_infos, ''])}
+            className="text-sm text-poke-yellow hover:underline">+ Adicionar Info</button>
+        </div>
+      </fieldset>
+
+      {/* Evolution */}
+      <fieldset className="bg-poke-card border border-poke-border rounded-xl p-5">
+        <legend className="text-white font-semibold px-2">Evolution</legend>
+        <div className="mt-3">
+          <Field label="Evolução">
+            <input value={form.evolution ?? ''} onChange={e => set('evolution', e.target.value || null)} className={inputCls} placeholder="ex: None / Evolve with Fire Stone" />
+          </Field>
         </div>
       </fieldset>
 

@@ -34,6 +34,11 @@ export default function PokemonCard({ ad, onClick }: { ad: PokemonAd; onClick: (
       <div className="flex items-start justify-between mb-3">
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-2 flex-wrap">
+            {ad.shiny && (
+              <span className="text-xs bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 rounded px-1.5 py-0.5">
+                ✦
+              </span>
+            )}
             <span className="font-bold text-white group-hover:text-poke-yellow transition-colors">
               {ad.name}
             </span>
@@ -82,7 +87,10 @@ export default function PokemonCard({ ad, onClick }: { ad: PokemonAd; onClick: (
           {ad.perfection != null && (
             <span className="text-amber-400 font-mono">{ad.perfection.toFixed(3)}%</span>
           )}
-          {ad.ability && <span className="truncate max-w-[100px]">{ad.ability}</span>}
+          {ad.seal && (
+            <span className="text-rose-400 truncate max-w-[90px]" title={ad.seal}>seal</span>
+          )}
+          {!ad.seal && ad.ability && <span className="truncate max-w-[100px]">{ad.ability}</span>}
         </div>
         {ad.price != null && (
           <span className="text-poke-yellow font-bold text-sm">

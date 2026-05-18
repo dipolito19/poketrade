@@ -56,6 +56,11 @@ export default function PokemonModal({ ad, onClose }: { ad: PokemonAd; onClose: 
         {/* Top bar */}
         <div className="sticky top-0 bg-poke-card border-b border-poke-border px-6 py-4 flex items-center justify-between z-10">
           <div className="flex items-center gap-3 flex-wrap">
+            {ad.shiny && (
+              <span className="text-xs bg-yellow-500/20 text-yellow-300 border border-yellow-500/30 rounded px-2 py-0.5">
+                ✦ Shiny
+              </span>
+            )}
             <h2 className="text-xl font-bold text-white">{ad.name}</h2>
             <TierBadge tier={ad.tier} />
             {ad.awaken && (
@@ -147,7 +152,7 @@ export default function PokemonModal({ ad, onClose }: { ad: PokemonAd; onClose: 
           </Section>
 
           {/* Ability & Held Item */}
-          {(ad.ability || ad.held_item) && (
+          {(ad.ability || ad.held_item || ad.held_level) && (
             <Section title="Habilidade & Item">
               <div className="flex gap-4 flex-wrap">
                 {ad.ability && (
@@ -160,6 +165,54 @@ export default function PokemonModal({ ad, onClose }: { ad: PokemonAd; onClose: 
                   <div className="bg-poke-border/50 rounded-lg px-4 py-2">
                     <p className="text-xs text-poke-muted">Held Item</p>
                     <p className="text-white font-medium">{ad.held_item}</p>
+                  </div>
+                )}
+                {ad.held_level && (
+                  <div className="bg-poke-border/50 rounded-lg px-4 py-2">
+                    <p className="text-xs text-poke-muted">Held (nível)</p>
+                    <p className="text-white font-medium">{ad.held_level}</p>
+                  </div>
+                )}
+              </div>
+            </Section>
+          )}
+
+          {/* Ability Description */}
+          {ad.ability_description && (
+            <Section title="Descrição da Ability">
+              <p className="text-gray-300 text-sm whitespace-pre-wrap leading-relaxed bg-poke-border/30 rounded-lg p-3">
+                {ad.ability_description}
+              </p>
+            </Section>
+          )}
+
+          {/* Abilities (plural) */}
+          {ad.abilities?.length > 0 && (
+            <Section title="Abilities">
+              <div className="flex flex-wrap gap-2">
+                {ad.abilities.map((ab, i) => (
+                  <span key={i} className="bg-teal-500/10 border border-teal-500/20 text-teal-300 rounded-lg px-3 py-1 text-sm">
+                    {ab}
+                  </span>
+                ))}
+              </div>
+            </Section>
+          )}
+
+          {/* Seal & Aura */}
+          {(ad.seal || ad.aura) && (
+            <Section title="Seal & Aura">
+              <div className="flex gap-4 flex-wrap">
+                {ad.seal && (
+                  <div className="bg-rose-500/10 border border-rose-500/20 rounded-lg px-4 py-2">
+                    <p className="text-xs text-poke-muted">Seal</p>
+                    <p className="text-rose-300 font-medium">{ad.seal}</p>
+                  </div>
+                )}
+                {ad.aura && (
+                  <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-lg px-4 py-2">
+                    <p className="text-xs text-poke-muted">PokeAura</p>
+                    <p className="text-indigo-300 font-medium">{ad.aura}</p>
                   </div>
                 )}
               </div>
@@ -204,6 +257,27 @@ export default function PokemonModal({ ad, onClose }: { ad: PokemonAd; onClose: 
                   </span>
                 ))}
               </div>
+            </Section>
+          )}
+
+          {/* Extra Infos */}
+          {ad.extra_infos?.length > 0 && (
+            <Section title="Extra Infos">
+              <ul className="space-y-1.5">
+                {ad.extra_infos.map((info, i) => (
+                  <li key={i} className="flex gap-2 text-sm text-gray-300">
+                    <span className="text-poke-yellow mt-0.5 shrink-0">*</span>
+                    <span>{info}</span>
+                  </li>
+                ))}
+              </ul>
+            </Section>
+          )}
+
+          {/* Evolution */}
+          {ad.evolution && (
+            <Section title="Evolution">
+              <p className="text-gray-300 text-sm">{ad.evolution}</p>
             </Section>
           )}
 
