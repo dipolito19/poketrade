@@ -80,10 +80,18 @@ export default function PokemonCard({ ad, onClick }: { ad: PokemonAd; onClick: (
           {ad.perfection != null && (
             <span className="text-amber-400 font-mono">{ad.perfection.toFixed(3)}%</span>
           )}
-          {ad.seal && (
+          {ad.mega_stone && (
+            <span className="text-fuchsia-400 truncate max-w-[90px] font-medium" title={ad.mega_stone}>mega</span>
+          )}
+          {ad.cloth_repair && (
+            <span className="text-amber-400 truncate max-w-[90px]" title={ad.cloth_repair}>cloth</span>
+          )}
+          {!ad.mega_stone && !ad.cloth_repair && ad.seal && (
             <span className="text-rose-400 truncate max-w-[90px]" title={ad.seal}>seal</span>
           )}
-          {!ad.seal && ad.ability && <span className="truncate max-w-[100px]">{ad.ability}</span>}
+          {!ad.mega_stone && !ad.cloth_repair && !ad.seal && ad.ability && (
+            <span className="truncate max-w-[100px]">{ad.ability}</span>
+          )}
         </div>
         {ad.price != null && (
           <span className="text-poke-yellow font-bold text-sm">

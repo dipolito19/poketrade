@@ -28,6 +28,8 @@ export type ParsedPokemon = {
   abilities: string[]
   seal: string | null
   aura: string | null
+  cloth_repair: string | null
+  mega_stone: string | null
   held_item: string | null
   held_level: string | null
   tms: { name: string; level: number }[]
@@ -63,6 +65,8 @@ const SECTION_HEADER_PATTERNS: RegExp[] = [
   /^special ability/i,
   /^abilities\s*:/i,
   /^seal:/i,
+  /^cloth\s*repair\s*:/i,
+  /^mega\s*stone\s*:/i,
   /^poke\s*aura\s*:/i,
   /^held item:/i,
   /^held\s*:?\s*$/i,
@@ -115,6 +119,8 @@ export function parsePokemonText(raw: string): ParsedPokemon {
     abilities: [],
     seal: null,
     aura: null,
+    cloth_repair: null,
+    mega_stone: null,
     held_item: null,
     held_level: null,
     tms: [],
@@ -283,6 +289,14 @@ export function parsePokemonText(raw: string): ParsedPokemon {
     // Seal
     const sealM = line.match(/^seal:\s*(.+?)\.?\s*$/i)
     if (sealM) { result.seal = sealM[1].trim(); continue }
+
+    // Cloth Repair: ATK +2000% DEF +2000%
+    const clothM = line.match(/^cloth\s*repair\s*:\s*(.+?)\.?\s*$/i)
+    if (clothM) { result.cloth_repair = clothM[1].trim(); continue }
+
+    // Mega Stone: Aggronite [+10]
+    const megaM = line.match(/^mega\s*stone\s*:\s*(.+?)\.?\s*$/i)
+    if (megaM) { result.mega_stone = megaM[1].trim(); continue }
 
     // PokeAura
     const auraM = line.match(/^poke\s*aura\s*:\s*(.+?)\.?\s*$/i)

@@ -193,6 +193,26 @@ export default function PokemonModal({ ad, onClose }: { ad: PokemonAd; onClose: 
             </Section>
           )}
 
+          {/* Cloth Repair & Mega Stone — high priority display */}
+          {(ad.cloth_repair || ad.mega_stone) && (
+            <Section title="Bônus Especiais">
+              <div className="flex gap-4 flex-wrap">
+                {ad.cloth_repair && (
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-2">
+                    <p className="text-xs text-poke-muted">Cloth Repair</p>
+                    <p className="text-amber-300 font-bold">{ad.cloth_repair}</p>
+                  </div>
+                )}
+                {ad.mega_stone && (
+                  <div className="bg-fuchsia-500/10 border border-fuchsia-500/30 rounded-lg px-4 py-2">
+                    <p className="text-xs text-poke-muted">Mega Stone</p>
+                    <p className="text-fuchsia-300 font-bold">{ad.mega_stone}</p>
+                  </div>
+                )}
+              </div>
+            </Section>
+          )}
+
           {/* Seal & Aura */}
           {(ad.seal || ad.aura) && (
             <Section title="Seal & Aura">

@@ -15,7 +15,7 @@ const DEFAULT: FormData = {
   bonus_hp: 0, bonus_atk: 0, bonus_def: 0,
   bonus_spatk: 0, bonus_spdef: 0, bonus_speed: 0,
   perfection: null, ability: null, ability_description: null, abilities: [],
-  seal: null, aura: null, held_item: null, held_level: null,
+  seal: null, aura: null, cloth_repair: null, mega_stone: null, held_item: null, held_level: null,
   tms: [], move_slots_used: 0, move_slots_total: 0,
   move_upgrades_count: null, move_upgrades: [],
   vitamins_used: 0, vitamins_total: 0, vitamin_details: [],
@@ -216,13 +216,19 @@ export default function AdminForm({ initial, onSaved, onCancel }: Props) {
 
       {/* Seal & Aura */}
       <fieldset className="bg-poke-card border border-poke-border rounded-xl p-5">
-        <legend className="text-white font-semibold px-2">Seal & Aura</legend>
+        <legend className="text-white font-semibold px-2">Seal, Aura & Bônus</legend>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
           <Field label="Seal">
             <input value={form.seal ?? ''} onChange={e => set('seal', e.target.value || null)} className={inputCls} placeholder="ex: star seal F (ATK: 40% DEF: 40%)" />
           </Field>
           <Field label="PokeAura">
             <input value={form.aura ?? ''} onChange={e => set('aura', e.target.value || null)} className={inputCls} placeholder="ex: Niver (+0) (ATK +66%) (DEF +85%)" />
+          </Field>
+          <Field label="Cloth Repair">
+            <input value={form.cloth_repair ?? ''} onChange={e => set('cloth_repair', e.target.value || null)} className={inputCls} placeholder="ex: ATK +2000% DEF +2000%" />
+          </Field>
+          <Field label="Mega Stone">
+            <input value={form.mega_stone ?? ''} onChange={e => set('mega_stone', e.target.value || null)} className={inputCls} placeholder="ex: Aggronite [+10]" />
           </Field>
         </div>
       </fieldset>
