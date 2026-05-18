@@ -23,7 +23,7 @@ const DEFAULT: FormData = {
   price: null, contact: null, description: null, raw_text: null,
 }
 
-const TIERS = ['S++', 'S+', 'S', 'A++', 'A+', 'A', 'B++', 'B+', 'B', 'C']
+const TIERS = ['GOD', 'S++', 'S+', 'S', 'A++', 'A+', 'A', 'B++', 'B+', 'B', 'C']
 
 type Props = {
   initial?: PokemonAd

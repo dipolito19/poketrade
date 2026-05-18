@@ -1,6 +1,6 @@
 'use client'
 
-const TIERS = ['S++', 'S+', 'S', 'A++', 'A+', 'A', 'B++', 'B+', 'B', 'C']
+const TIERS = ['GOD', 'S++', 'S+', 'S', 'A++', 'A+', 'A', 'B++', 'B+', 'B', 'C']
 
 type Props = {
   q: string

@@ -366,8 +366,8 @@ function parseNameLine(line: string, result: ParsedPokemon) {
   const nameM = rest.match(/^([A-Z][a-zA-Z\-']+(?:\s[A-Z][a-zA-Z\-']+)?)/)
   if (nameM) result.name = nameM[1].trim()
 
-  // Tier: first (X+*) looking like a tier rating
-  const tierM = rest.match(/\(([SABCDE][+\-]*)\)/)
+  // Tier: GOD (highest) or standard letter tiers like S++, A+, B
+  const tierM = rest.match(/\((GOD|[SABCDE][+\-]*)\)/)
   if (tierM) result.tier = tierM[1]
 
   // Awaken: (A) tag

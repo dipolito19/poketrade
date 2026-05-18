@@ -1,6 +1,7 @@
 'use client'
 
 const TIER_COLORS: Record<string, string> = {
+  'GOD': 'text-white border-yellow-400 bg-gradient-to-r from-yellow-500/30 to-orange-500/30',
   'S++': 'text-red-400 border-red-400',
   'S+':  'text-orange-400 border-orange-400',
   'S':   'text-yellow-400 border-yellow-400',
@@ -16,9 +17,10 @@ const TIER_COLORS: Record<string, string> = {
 export default function TierBadge({ tier }: { tier: string | null }) {
   if (!tier) return null
   const cls = TIER_COLORS[tier] ?? 'text-gray-400 border-gray-400'
+  const isGod = tier === 'GOD'
   return (
-    <span className={`inline-block text-xs font-bold border rounded px-1.5 py-0.5 ${cls}`}>
-      {tier}
+    <span className={`inline-block text-xs font-bold border rounded px-1.5 py-0.5 ${cls} ${isGod ? 'shadow-[0_0_8px_rgba(250,204,21,0.6)]' : ''}`}>
+      {isGod ? '✦ GOD' : tier}
     </span>
   )
 }
