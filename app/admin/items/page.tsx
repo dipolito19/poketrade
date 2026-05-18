@@ -6,7 +6,7 @@ import { ItemAd } from '@/lib/supabase'
 
 type FormData = Omit<ItemAd, 'id' | 'created_at' | 'updated_at'>
 
-const DEFAULT: FormData = { name: '', description: null, price: null, contact: null }
+const DEFAULT: FormData = { name: '', description: null, image_url: null, price: null, contact: null }
 
 const inputCls = 'w-full bg-poke-dark border border-poke-border rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-poke-yellow/60 transition-colors'
 
@@ -55,7 +55,7 @@ export default function AdminItemsPage() {
 
   function openEdit(ad: ItemAd) {
     setEditing(ad)
-    setForm({ name: ad.name, description: ad.description, price: ad.price, contact: ad.contact })
+    setForm({ name: ad.name, description: ad.description, image_url: ad.image_url, price: ad.price, contact: ad.contact })
     setError('')
     setShowForm(true)
   }
@@ -135,6 +135,19 @@ export default function AdminItemsPage() {
               <input value={form.contact ?? ''} onChange={e => setForm(f => ({ ...f, contact: e.target.value || null }))}
                 placeholder="Discord, WhatsApp, etc." className={inputCls} />
             </Field>
+            <div className="sm:col-span-2">
+              <Field label="URL da Imagem">
+                <input
+                  value={form.image_url ?? ''}
+                  onChange={e => setForm(f => ({ ...f, image_url: e.target.value || null }))}
+                  placeholder="https://i.imgur.com/..."
+                  className={inputCls}
+                />
+                {form.image_url && (
+                  <img src={form.image_url} alt="preview" className="mt-2 h-24 object-contain rounded-lg border border-poke-border" onError={e => (e.currentTarget.style.display = 'none')} />
+                )}
+              </Field>
+            </div>
           </div>
           <Field label="Descrição">
             <textarea value={form.description ?? ''} onChange={e => setForm(f => ({ ...f, description: e.target.value || null }))}

@@ -38,6 +38,16 @@ export default function ItemModal({ ad, onClose }: { ad: ItemAd; onClose: () => 
         </div>
 
         <div className="p-6 space-y-5">
+          {ad.image_url && (
+            <div className="flex justify-center">
+              <img
+                src={ad.image_url}
+                alt={ad.name}
+                className="max-h-48 max-w-full object-contain rounded-xl border border-poke-border"
+                onError={e => { e.currentTarget.style.display = 'none' }}
+              />
+            </div>
+          )}
           {ad.description && (
             <div>
               <p className="text-xs text-poke-muted uppercase tracking-widest mb-2">Descrição</p>

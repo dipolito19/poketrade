@@ -15,6 +15,7 @@ export type ItemAd = {
   id: string
   name: string
   description: string | null
+  image_url: string | null
   price: number | null
   contact: string | null
   created_at: string

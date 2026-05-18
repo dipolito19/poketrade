@@ -19,9 +19,12 @@ export default function ItemCard({ ad, onClick }: { ad: ItemAd; onClick: () => v
             </p>
           )}
         </div>
-        {/* Item icon */}
-        <div className="shrink-0 w-12 h-12 rounded-lg bg-poke-border/60 flex items-center justify-center text-2xl group-hover:bg-poke-yellow/10 transition-colors">
-          &#9670;
+        {/* Image or fallback icon */}
+        <div className="shrink-0 w-14 h-14 rounded-lg bg-poke-border/60 overflow-hidden flex items-center justify-center text-2xl group-hover:bg-poke-yellow/10 transition-colors">
+          {ad.image_url
+            ? <img src={ad.image_url} alt={ad.name} className="w-full h-full object-cover" onError={e => { e.currentTarget.style.display = 'none'; e.currentTarget.parentElement!.innerHTML = '&#9670;' }} />
+            : <span>&#9670;</span>
+          }
         </div>
       </div>
 
