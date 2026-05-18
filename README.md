@@ -1,4 +1,4 @@
-# PokéTrade
+# PKMD Trade
 
 Plataforma de anúncios de Pokémon com parser automático, painel admin e design escuro temático.
 

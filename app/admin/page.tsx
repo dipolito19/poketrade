@@ -37,7 +37,7 @@ export default function AdminLoginPage() {
         <div className="text-center mb-8">
           <div className="text-5xl mb-4">&#9670;</div>
           <h1 className="text-2xl font-bold text-white">Painel Admin</h1>
-          <p className="text-poke-muted text-sm mt-1">PokéTrade</p>
+          <p className="text-poke-muted text-sm mt-1">PKMD Trade</p>
         </div>
 
         <form onSubmit={handleLogin} className="bg-poke-card border border-poke-border rounded-2xl p-6 space-y-4">
