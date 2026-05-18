@@ -49,6 +49,8 @@ export type PokemonAd = {
   abilities: string[]
   seal: string | null
   aura: string | null
+  cloth_repair: string | null
+  mega_stone: string | null
   held_item: string | null
   held_level: string | null
   tms: { name: string; level: number }[]
